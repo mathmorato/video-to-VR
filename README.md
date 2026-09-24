@@ -1,4 +1,4 @@
-# VR Video Converter 🥽 (v.1.0.1)
+# VR Video Converter (v.1.0.2)
 
 Aplicação web client-side completa, profissional e de alto desempenho para conversão e visualização de vídeos convencionais (**2D**), vídeos hemisféricos (**180°**) e vídeos panorâmicos (**360°**) em formatos adequados para **Realidade Virtual (VR)**, **Google Cardboard**, **Side-by-Side (SBS Half / Full)** e **Top-and-Bottom (Over/Under)**.
 
@@ -6,9 +6,10 @@ O processamento é **100% local e offline**, executado inteiramente no navegador
 
 ---
 
-## 📑 Sumário
+## Sumário
 
-- [O Que Há de Novo na Versão 3](#-o-que-há-de-novo-na-versão-3)
+- [O Que Há de Novo na Versão 5 (v.1.0.2)](#-o-que-há-de-novo-na-versão-5-v102)
+- [O Que Há de Novo na Versão 3 e 4](#-histórico-de-versões-anteriores)
 - [Fundamentos Conceituais Obrigatórios](#-fundamentos-conceituais-obrigatórios)
   - [Projeção vs. Layout Estereoscópico](#1-projeção-geométrica-vs-layout-estereoscópico)
   - [Estereoscopia (Mono, SBS, Top/Bottom)](#2-estereoscopia-mono-vs-estéreo)
@@ -35,7 +36,41 @@ O processamento é **100% local e offline**, executado inteiramente no navegador
 
 ---
 
-## 🌟 O Que Há de Novo na Versão 3
+## ⚡ O Que Há de Novo na Versão 5 (v.1.0.2)
+
+1. **Estimativa de Tempo Realista e Suavizada**:
+   - Algoritmo baseado nos dados reais do FFmpeg: calcula simultaneamente o tempo restante por **velocidade FFmpeg (`speed=...x`)** e por **taxa de processamento de quadros (`frames / elapsed`)**.
+   - **Média móvel (Moving Average com aparagem de outliers)** para eliminar oscilações bruscas nos primeiros momentos de codificação.
+   - Apresentação contínua de **Tempo Decorrido**, **Tempo Restante Estimado**, **Tempo Total Estimado** e **Previsão de Horário de Conclusão** (`aproximadamente às HH:MM`).
+   - Sem contadores artificiais nem `setTimeout` falso.
+
+2. **Ampulheta Animada e Estados Visuais**:
+   - Ícone SVG inline com animação contínua em CSS (`@keyframes hourglass-spin`).
+   - Estados visuais dedicados: `loading`, `processing`, `slow`, `finishing`, `completed`, `error` e `cancelled`.
+   - A ampulheta cessa a rotação e dá lugar a ícones específicos de conclusão, erro ou cancelamento.
+   - Suporte a acessibilidade e `prefers-reduced-motion: reduce`.
+
+3. **Regra Estrita de Zero Emojis e Ícones SVG Inline**:
+   - Interface 100% livre de caracteres emoji.
+   - Substituição integral por ícones vetoriais SVG inline leves, nítidos em qualquer escala e totalmente funcionais offline (sem dependência de fontes CDN como FontAwesome, Lucide ou Material Icons).
+
+4. **Detecção e Alerta de Conversões Pesadas**:
+   - Análise prévia da complexidade do vídeo através do cálculo de pixels por quadro (`largura × altura`), vazão de pixels por segundo (`pixels/frame × FPS`) e total de quadros.
+   - Alerta modal preventivo para vídeos em 4K/60FPS com 3 alternativas claras: **Continuar**, **Usar configuração recomendada (1080p equilibrado)** ou **Cancelar**.
+   - Respeito integral à decisão do usuário: a resolução e FPS originais nunca são reduzidos sem permissão explícita.
+
+5. **Modo Teste Rápido e Presets de Desempenho**:
+   - Preset de **Teste Rápido** (720p, SBS Half, H.264, qualidade média, original FPS) para validação ultra-rápida do pipeline completo (upload → WASM → preview → download).
+   - Presets de codificação: **Rápido**, **Equilibrado**, **Alta qualidade**, **Máxima qualidade** e **Personalizado**.
+
+6. **Estabilidade e Throttling da Interface**:
+   - Atualização do DOM agrupada em intervalos de ~500ms, impedindo congelamento ou perda de desempenho da main thread durante a emissão intensa de eventos do WebAssembly.
+
+---
+
+## 🌟 Histórico de Versões Anteriores
+
+### Versão 3 e 4
 
 1. **Configuração VR Avançada Modular**:
    - Controle independente entre **Tipo de Entrada** (2D, 180°, 360°), **Projeção** (Equirretangular, Fisheye, Dual Fisheye), **Estereoscopia de Entrada** (Mono, SBS, Top/Bottom) e **Layout de Saída** (SBS Half, SBS Full, Top/Bottom, Cardboard).

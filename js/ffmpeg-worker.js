@@ -1,6 +1,6 @@
 /**
  * VR Video Converter
- * Version: v.1.0.1
+ * Version: v.1.0.2
  *
  * ffmpeg-worker.js - Web Worker dedicado para processamento FFmpeg WebAssembly
  *

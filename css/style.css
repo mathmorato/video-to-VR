@@ -951,3 +951,199 @@ label {
   font-size: 0.78rem;
   color: var(--color-primary-light);
 }
+
+/* AMPULHETA ANIMADA (SEÇÕES 15, 16, 17, 51, 52) */
+@keyframes hourglass-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.conversion-hourglass {
+  display: inline-block;
+  vertical-align: middle;
+  width: 24px;
+  height: 24px;
+  color: var(--color-primary-light);
+  transition: transform 0.3s ease;
+}
+
+.conversion-hourglass.is-spinning {
+  animation: hourglass-spin 1.8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .conversion-hourglass.is-spinning {
+    animation: none;
+  }
+}
+
+/* MÉTRICAS EXPANDIDAS E BADGES DE VELOCIDADE */
+.progress-title-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.speed-rating-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-muito-lento {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.badge-lento {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-normal {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.badge-rápido,
+.badge-rapido {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.completion-estimate-bar {
+  margin-top: 14px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: 0.84rem;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+.completion-time {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-left: 4px;
+}
+
+/* MODAL DE CONVERSÃO PESADA (SEÇÃO 22) */
+.modal-card-dialog {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  max-width: 520px;
+  width: 90%;
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px);
+  animation: modal-enter 0.25s ease-out;
+}
+
+@keyframes modal-enter {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.heavy-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.heavy-modal-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.heavy-modal-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 2px;
+}
+
+.heavy-modal-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.heavy-specs-box {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 12px;
+  margin-bottom: 14px;
+}
+
+.heavy-spec-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.heavy-spec-label {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.heavy-spec-val {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.heavy-modal-info {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.heavy-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ÍCONES SVG UTILITÁRIOS */
+.ui-icon {
+  display: inline-block;
+  vertical-align: middle;
+  stroke: currentColor;
+}
+
+.ui-icon-xs {
+  display: inline-block;
+  vertical-align: -2px;
+  stroke: currentColor;
+  margin-right: 4px;
+}
+
+.text-warning { color: #f59e0b; }
+.text-danger { color: #ef4444; }
+.text-success { color: #10b981; }
+.text-info { color: #3b82f6; }
+

@@ -1,6 +1,6 @@
 /**
  * VR Video Converter
- * Version: v.1.0.1
+ * Version: v.1.0.2
  *
  * vr-processing.js - Motor de Processamento Espacial VR, Filtros FFmpeg e Presets
  * Implementa o pipeline de transformação por olho:
@@ -18,9 +18,24 @@ export function makeEven(val) {
 }
 
 /**
- * Perfis e Presets da Versão 3
+ * Perfis e Presets da Versão
  */
 export const PRESETS = {
+  quick_test: {
+    name: 'Teste Rápido (720p - Validação)',
+    format: 'sbs_half',
+    outputFormat: 'sbs_half',
+    outputLayout: 'sbs_half',
+    videoType: '2d',
+    projection: 'equirectangular',
+    stereoscopy: 'mono',
+    resolution: '1280x720',
+    fps: 'original',
+    codec: 'h264',
+    audio: 'keep',
+    quality: 'fast',
+    description: 'Conversão ultra-rápida em 720p com preset veloz para validar rapidamente o pipeline e download.'
+  },
   cardboard: {
     name: 'Google Cardboard 2D (Recomendado)',
     format: 'cardboard',
@@ -469,26 +484,29 @@ export function buildSbsFilter(options) {
 
 /**
  * Mapeia opção de qualidade para argumentos do encoder libx264
- * @param {string} quality - 'auto' | 'low' | 'medium' | 'high' | 'very_high' | 'custom'
+ * @param {string} quality - 'fast' | 'balanced' | 'high' | 'max' | 'low' | 'medium' | 'very_high' | 'custom'
  * @param {number} [customCrf]
  * @returns {string[]} Argumentos do FFmpeg
  */
-export function getQualityArgs(quality, customCrf = 23) {
+export function getQualityArgs(quality, customCrf = 22) {
   switch (quality) {
+    case 'fast':
     case 'low':
-      // Compatível e ultrarrápido
-      return ['-crf', '28', '-preset', 'ultrafast'];
+      // Modo rápido: prioriza velocidade de conversão
+      return ['-crf', '26', '-preset', 'ultrafast'];
+    case 'balanced':
     case 'medium':
-      // Equilibrado para WebAssembly
-      return ['-crf', '23', '-preset', 'veryfast'];
+      // Modo equilibrado: balanceia fidelidade e tempo de processamento
+      return ['-crf', '22', '-preset', 'veryfast'];
     case 'high':
-      // Alta nitidez recomendada para VR
-      return ['-crf', '19', '-preset', 'veryfast'];
+      // Alta qualidade: recomendado para VR nítido
+      return ['-crf', '18', '-preset', 'veryfast'];
+    case 'max':
     case 'very_high':
-      // Máxima fidelidade
-      return ['-crf', '16', '-preset', 'faster'];
+      // Máxima qualidade: maior fidelidade visual
+      return ['-crf', '15', '-preset', 'faster'];
     case 'custom':
-      return ['-crf', String(customCrf || 23), '-preset', 'veryfast'];
+      return ['-crf', String(customCrf || 22), '-preset', 'veryfast'];
     case 'auto':
     default:
       return ['-crf', '22', '-preset', 'veryfast'];

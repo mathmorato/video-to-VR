@@ -1,6 +1,6 @@
 /**
  * VR Video Converter
- * Version: v.1.0.1
+ * Version: v.1.0.2
  *
  * app.js - Ponto de entrada e orquestrador da aplicação VR Video Converter
  */
@@ -11,6 +11,7 @@ import { convertVideo, cancelConversion } from './converter.js';
 import { UIManager } from './ui.js';
 import { VRViewer } from './vr-viewer.js';
 import { ffmpegManager } from './ffmpeg.js';
+import { TimeEstimator } from './time-estimator.js';
 
 class App {
   constructor() {
@@ -21,6 +22,9 @@ class App {
     this.inputPreviewUrl = null;
     this.conversionStartTime = 0;
     this.vrViewer = null;
+    this.timeEstimator = null;
+    this.heavyBypassed = false;
+    this.isConverting = false;
 
     this.init();
   }
@@ -139,6 +143,7 @@ class App {
       }
 
       this.currentFile = file;
+      this.heavyBypassed = false;
       this.inputPreviewUrl = URL.createObjectURL(file);
       this.ui.elements.inputPreviewVideo.src = this.inputPreviewUrl;
 
@@ -149,7 +154,7 @@ class App {
       // Exibe metadados na interface
       this.ui.showVideoMetadata(this.currentMetadata);
 
-      // Ajusta sugestão de preset com base na detecção (Seção 6)
+      // Ajusta sugestão de preset com base na detecção
       if (this.currentMetadata.detectedType === '360') {
         if (this.currentMetadata.detectedStereo === 'tb') {
           this.ui.applyPresetToForm('vr360_tb');
@@ -181,6 +186,24 @@ class App {
       console.error('[App] Erro ao analisar o vídeo:', err);
       alert(`Não foi possível carregar o vídeo: ${err.message}`);
     }
+  }
+
+  /**
+   * Aplica configurações recomendadas para vídeos pesados (Seção 23)
+   */
+  applyRecommendedSettings() {
+    this.ui.elements.selectResolution.value = '1920x1080';
+    this.ui.elements.selectOutputFormat.value = 'sbs_half';
+    this.ui.elements.selectCodec.value = 'h264';
+    this.ui.elements.selectQuality.value = 'balanced';
+    this.ui.elements.selectFps.value = 'original';
+    this.ui.elements.selectAudio.value = 'aac';
+    this.ui.toggleCustomResolutionInputs();
+    this.ui.toggleCustomQualityInputs();
+    this.ui.updateUpscaleNotice();
+    this.ui.updateStereoscopyNotice();
+    this.ui.updateVrMetadataPanel();
+    console.log('[App] Configuração recomendada aplicada: 1080p, SBS Half, H.264, Equilibrado.');
   }
 
   /**
@@ -275,10 +298,13 @@ class App {
     btnCancel.addEventListener('click', () => {
       if (confirm('Deseja realmente cancelar a conversão em andamento?')) {
         cancelConversion();
-        this.ui.updateStatus('Conversão cancelada pelo usuário.');
+        this.isConverting = false;
+        this.ui.setConversionState('cancelled', 'Conversão cancelada pelo usuário.');
         btnCancel.disabled = true;
         btnConvert.disabled = false;
-        alert('Conversão cancelada.');
+        if (this.timeEstimator) {
+          this.timeEstimator.reset();
+        }
       }
     });
 
@@ -297,47 +323,113 @@ class App {
   }
 
   /**
-   * Executa a conversão completa
+   * Executa a conversão completa com validação e estimativa contínua
    */
   async startConversion() {
+    if (this.isConverting) {
+      console.warn('[App] Uma conversão já está em andamento.');
+      return;
+    }
+
     if (!this.currentFile || !this.currentMetadata) {
       alert('Por favor, selecione um arquivo de vídeo primeiro.');
       return;
     }
 
+    // Calcula complexidade do processamento (Seções 19, 20, 21, 22)
+    const complexity = TimeEstimator.calculateComplexity(this.currentMetadata);
+    console.log(`[VR] Versão: ${APP_VERSION}`);
+    console.log(`[VR] Entrada: ${this.currentMetadata.name}`);
+    console.log(`[VR] Duração: ${this.currentMetadata.duration}s`);
+    console.log(`[VR] Resolução: ${this.currentMetadata.width}x${this.currentMetadata.height}`);
+    console.log(`[VR] FPS: ${this.currentMetadata.fps}`);
+    console.log(`[VR] Frames: ${complexity.totalFrames}`);
+    console.log(`[VR] Carga: ${complexity.tier}`);
+
+    // Exibe alerta de conversão pesada se necessário e ainda não ignorado pelo usuário
+    if (complexity.isHeavy && !this.heavyBypassed) {
+      this.ui.showHeavyConversionModal(
+        complexity,
+        () => {
+          // Continuar mesmo assim
+          this.heavyBypassed = true;
+          this.startConversion();
+        },
+        () => {
+          // Usar configuração recomendada
+          this.heavyBypassed = true;
+          this.applyRecommendedSettings();
+          this.startConversion();
+        },
+        () => {
+          // Cancelar
+          console.log('[App] Conversão pesada cancelada pelo usuário no modal.');
+        }
+      );
+      return;
+    }
+
     const options = this.ui.getFormOptions();
+    console.log('[VR] Configuração:', options);
+
+    this.isConverting = true;
     this.conversionStartTime = Date.now();
+    this.timeEstimator = new TimeEstimator(this.currentMetadata);
 
     this.ui.showProgress();
+    this.ui.setConversionState('loading', 'Inicializando FFmpeg WebAssembly...');
+
+    let lastUiUpdateTime = 0;
 
     try {
-      console.log('[App] Iniciando conversão V3 com opções:', options);
-
       const result = await convertVideo(
         this.currentFile,
         this.currentMetadata,
         options,
         (progress) => {
-          this.ui.updateProgress(progress, this.conversionStartTime);
+          // Atualiza o estimador de tempo real
+          const metrics = this.timeEstimator.update(progress);
+
+          const now = performance.now();
+          // Throttling: Atualiza a interface a cada ~500ms para evitar sobrecarga na main thread
+          if (metrics.percent >= 100 || (now - lastUiUpdateTime >= 500)) {
+            lastUiUpdateTime = now;
+            this.ui.updateProgress(metrics);
+
+            if (metrics.speedRating && metrics.speedRating.slow) {
+              this.ui.setConversionState('slow', 'Processamento lento em andamento...');
+            } else {
+              this.ui.setConversionState('processing', 'Processando vídeo...');
+            }
+
+            console.log(`[VR] FFmpeg: ${progress.timeFormatted || ''} | Velocidade: ${metrics.speed ? metrics.speed + 'x' : '-'} | Progresso: ${metrics.percent}% | Estimativa: ${metrics.remainingFormatted}`);
+          }
         },
         (log) => {
           this.ui.appendLog(log);
         },
         (status) => {
-          this.ui.updateStatus(status);
+          if (status.includes('Carregando')) {
+            this.ui.setConversionState('loading', status);
+          } else if (status.includes('Finalizando') || status.includes('Salvando')) {
+            this.ui.setConversionState('finishing', status);
+          } else {
+            this.ui.updateStatus(status);
+          }
         }
       );
 
-      console.log('[App] Conversão concluída com sucesso:', result);
+      console.log('[VR] Output:', result);
+      this.isConverting = false;
       this.currentResult = result;
+      this.ui.setConversionState('completed', 'Conversão concluída com sucesso!');
       this.ui.showResult(result, this.currentMetadata, options);
 
     } catch (err) {
       console.error('[App] Falha na conversão:', err);
-      this.ui.updateStatus(`Erro: ${err.message}`);
+      this.isConverting = false;
+      this.ui.setConversionState('error', `Não foi possível concluir a conversão: ${err.message}`);
       alert(`Ocorreu um erro durante a conversão:\n\n${err.message}`);
-      this.ui.elements.btnConvert.disabled = false;
-      this.ui.elements.btnCancel.disabled = true;
     }
   }
 
@@ -356,6 +448,13 @@ class App {
     this.currentMetadata = null;
     this.currentResult = null;
     this.conversionStartTime = 0;
+    this.heavyBypassed = false;
+    this.isConverting = false;
+
+    if (this.timeEstimator) {
+      this.timeEstimator.reset();
+      this.timeEstimator = null;
+    }
 
     if (this.vrViewer) {
       this.vrViewer.destroy();
@@ -397,7 +496,6 @@ class App {
       vrModal.style.display = 'flex';
 
       const options = this.ui.getFormOptions();
-      // Modo VR automático (Seção 60 da V3)
       const projection = options.videoType === '360' ? '360' : (options.videoType === '180' ? '180' : 'flat');
       const stereoLayout = (options.outputLayout === 'top_bottom' || options.outputFormat === 'top_bottom') ? 'tb' : 'sbs';
 
@@ -485,7 +583,7 @@ class App {
       });
     }
 
-    // Detecção WebXR (Seção 29, 30 da V3)
+    // Detecção WebXR
     if ('xr' in navigator) {
       vrWebXrBtn.style.display = 'inline-flex';
       vrWebXrBtn.addEventListener('click', async () => {

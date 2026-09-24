@@ -104,10 +104,44 @@ async function main() {
   assert.strictEqual(invEmptyFile.valid, false, 'Arquivo de 0 bytes deve ser recusado');
   console.log('✓ validateVRConfiguration: validações e avisos contextuais validados com sucesso.');
 
-  // 6. Testes de Validação do Binário WebAssembly (Seções 28, 29 e 58)
+  // 6. Testes de Validação de Versão e TimeEstimator (Versão 5)
   const { APP_VERSION } = await import('../js/version.js');
-  assert.strictEqual(APP_VERSION, 'v.1.0.1', 'Versão deve ser exatamente v.1.0.1');
+  assert.strictEqual(APP_VERSION, 'v.1.0.2', 'Versão deve ser exatamente v.1.0.2');
   console.log(`✓ APP_VERSION: validada como ${APP_VERSION} no módulo central.`);
+
+  const { TimeEstimator } = await import('../js/time-estimator.js');
+  const { PRESETS } = await import('../js/vr-processing.js');
+
+  // Teste de complexidade para vídeo 4K 60FPS (Seções 19-22)
+  const meta4k = { width: 3840, height: 2160, fps: 60, duration: 238, name: 'video_4k.mp4' };
+  const complexity4k = TimeEstimator.calculateComplexity(meta4k);
+  assert.strictEqual(complexity4k.pixelsPerFrame, 8294400, 'Pixels por quadro de 4K deve ser 8.294.400');
+  assert.strictEqual(complexity4k.pixelsPerSecond, 497664000, 'Pixels/s de 4K 60FPS deve ser 497.664.000');
+  assert.strictEqual(complexity4k.totalFrames, 14280, 'Total de quadros de 238s @ 60FPS deve ser 14.280');
+  assert.strictEqual(complexity4k.isHeavy, true, 'Vídeo 4K 60FPS deve ser classificado como pesado');
+  assert.strictEqual(complexity4k.tier, 'Muito pesado', 'Tier deve ser Muito pesado');
+  console.log('✓ TimeEstimator.calculateComplexity: cálculo exato de 4K/60FPS aprovado.');
+
+  // Teste de cálculo de estimativa contínua e suavização (Seções 4-8, 30)
+  const estimator = new TimeEstimator(meta4k);
+  // Simula estado inicial
+  const initMetrics = estimator.update({});
+  assert.strictEqual(initMetrics.remainingFormatted, 'Calculando estimativa...', 'Início deve exibir Calculando estimativa...');
+
+  // Simula progresso com speed=0.0217x e frame=397
+  const progressMock = { speed: 0.0217, frame: 397, time: 6.04, percent: 2.78 };
+  const updatedMetrics = estimator.update(progressMock);
+  assert.ok(updatedMetrics.remainingSeconds > 0, 'Tempo restante deve ser maior que 0');
+  assert.strictEqual(updatedMetrics.speedRating.label, 'Muito lento', 'Speed 0.0217 deve ser classificado como Muito lento');
+  assert.strictEqual(updatedMetrics.speedRating.slow, true, 'Deve marcar slow=true para velocidade < 0.1x');
+  assert.ok(updatedMetrics.remainingFormatted.includes(':'), 'Deve formatar tempo restante como HH:MM:SS');
+  console.log(`✓ TimeEstimator.update: estimativa dinâmica calculada (${updatedMetrics.remainingFormatted}, ${updatedMetrics.speedRating.label}).`);
+
+  // Teste do preset Quick Test (Seção 24)
+  assert.ok(PRESETS.quick_test, 'Preset quick_test deve existir');
+  assert.strictEqual(PRESETS.quick_test.resolution, '1280x720');
+  assert.strictEqual(PRESETS.quick_test.codec, 'h264');
+  console.log('✓ Preset quick_test: validado para teste rápido 1280x720.');
 
   // Simula lógica de validação de WASM
   function testWasmBufferValidation(buffer, contentType = 'application/wasm') {

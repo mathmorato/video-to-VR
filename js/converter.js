@@ -1,6 +1,6 @@
 /**
  * VR Video Converter
- * Version: v.1.0.1
+ * Version: v.1.0.2
  *
  * converter.js - Orquestrador de conversão de vídeo
  * Responsável pela validação de parâmetros, montagem programática dos comandos
