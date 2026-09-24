@@ -1,6 +1,6 @@
 /**
  * VR Video Converter
- * Version: v.1.0.3
+ * Version: v.1.0.4
  *
  * app.js - Ponto de entrada e orquestrador da aplicação VR Video Converter
  */

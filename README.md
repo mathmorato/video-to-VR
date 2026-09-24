@@ -1,4 +1,4 @@
-# VR Video Converter (v.1.0.3)
+# VR Video Converter (v.1.0.4)
 
 Aplicação web client-side completa, profissional e de alto desempenho para conversão e visualização de vídeos convencionais (**2D**), vídeos hemisféricos (**180°**) e vídeos panorâmicos (**360°**) em formatos adequados para **Realidade Virtual (VR)**, **Google Cardboard**, **Side-by-Side (SBS Half / Full)** e **Top-and-Bottom (Over/Under)**.
 
@@ -8,8 +8,8 @@ O processamento é **100% local e offline**, executado inteiramente no navegador
 
 ## Sumário
 
-- [O Que Há de Novo na Versão 6 (v.1.0.3)](#-o-que-há-de-novo-na-versão-6-v103)
-- [Histórico de Versões Anteriores (v.1.0.2 / v.1.0.1)](#-histórico-de-versões-anteriores)
+- [O Que Há de Novo na Versão 6.1 (v.1.0.4)](#-o-que-há-de-novo-na-versão-61-v104)
+- [Histórico de Versões Anteriores (v.1.0.3 / v.1.0.2 / v.1.0.1)](#-histórico-de-versões-anteriores)
 - [Fundamentos Conceituais Obrigatórios](#-fundamentos-conceituais-obrigatórios)
   - [Projeção vs. Layout Estereoscópico](#1-projeção-geométrica-vs-layout-estereoscópico)
   - [Estereoscopia (Mono, SBS, Top/Bottom)](#2-estereoscopia-mono-vs-estéreo)
@@ -36,7 +36,25 @@ O processamento é **100% local e offline**, executado inteiramente no navegador
 
 ---
 
-## ⚡ O Que Há de Novo na Versão 6 (v.1.0.3)
+## ⚡ O Que Há de Novo na Versão 6.1 (v.1.0.4)
+
+1. **Rotação Fluida e Ininterrupta da Ampulheta (`@keyframes conversion-hourglass-spin`)**:
+   - Correção definitiva do efeito de travamento e reinício do giro: a manipulação do DOM agora preserva o elemento SVG durante todo o ciclo ativo (`loading`, `processing`, `slow`, `finishing`), atualizando dinamicamente apenas a mensagem de status sem reinicializar o ciclo da animação CSS.
+
+2. **Separação Visual e Fim dos Cards Colados**:
+   - Correção do container principal (`.app-main`) com `display: flex; flex-direction: column; gap: 28px;` e margem explícita `.card + .card, .progress-card { margin-top: 28px; }`, eliminando qualquer junção de bordas entre seções.
+   - Cards de métricas internas com design elevado (`linear-gradient(180deg, #182234 0%, #0f172a 100%)`), bordas nítidas em ciano (`rgba(56, 189, 248, 0.35)`), sombra destacada e espaçamento ampliado (`gap: 20px`), garantindo independência visual total de cada dado.
+
+3. **Cálculo Preciso da Barra de Carregamento e Percentual Real**:
+   - Resolução da dependência de `parseTime` no escopo isolado do `ffmpeg-worker.js`.
+   - Cálculo do percentual priorizando a contagem real de frames processados (`frame / totalFrames`), garantindo que a barra avance imediatamente desde o primeiro quadro codificado sem ficar travada em 0%.
+   - Retenção monotônica de estado no `TimeEstimator`, assegurando que velocidade FFmpeg e percentual nunca sejam zerados em ticks parciais do log.
+
+---
+
+## 🌟 Histórico de Versões Anteriores
+
+### Versão 6 (v.1.0.3)
 
 1. **Ampulheta SVG Girando de Verdade (`@keyframes conversion-hourglass-spin`)**:
    - Animação contínua em CSS aplicada à classe `.conversion-hourglass.is-active`, girando ininterruptamente a `1.5s linear infinite` durante todo o ciclo ativo da conversão.
@@ -45,19 +63,11 @@ O processamento é **100% local e offline**, executado inteiramente no navegador
    - Suporte a acessibilidade (`aria-hidden="true"`) e `@media (prefers-reduced-motion: reduce)`.
 
 2. **Separação Visual Clara e Organização dos Cards de Progresso**:
-   - Eliminação da aparência de bloco único colado: introduzido espaçamento evidente com `gap: 16px`.
-   - Estrutura hierárquica em duas linhas:
-     - **Linha 1 (Tempo - 3 Cards)**: Tempo Decorrido, Tempo Restante Estimado e Tempo Total Estimado.
-     - **Linha 2 (Desempenho e Frames - 2 Cards)**: Velocidade FFmpeg (com selo de status) e Quadro Atual.
-   - Cada card possui sua própria borda (`border: 1px solid rgba(255, 255, 255, 0.12)`), fundo contrastante `#0d121d`, cantos arredondados (`border-radius: 12px`), sombra suave (`box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3)`) e hover discreto (`translateY(-2px)`).
-   - Tipografia refinada: ícone SVG alinhado ao título do card e valores com destaque tipográfico (`font-size: 1.25rem; font-weight: 700`).
+   - Estrutura hierárquica em duas linhas (3 cards de tempo + 2 cards de desempenho e frames).
+   - Tipografia refinada: ícone SVG alinhado ao título do card e valores com destaque tipográfico.
 
 3. **Alerta de Processamento Lento Aprimorado**:
    - Caixa de aviso com ícone SVG inline vetorial amarelo e mensagem discreta sem emojis: `"Processamento lento detectado. A conversão continua normalmente."`
-
----
-
-## 🌟 Histórico de Versões Anteriores
 
 ### Versão 5 (v.1.0.2)
 

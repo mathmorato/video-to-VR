@@ -1,6 +1,6 @@
 /**
  * VR Video Converter
- * Version: v.1.0.3
+ * Version: v.1.0.4
  *
  * video-info.js - Extração de metadados e detecção de tipo de vídeo
  */

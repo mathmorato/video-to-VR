@@ -31,9 +31,9 @@ async function verifyAll() {
   console.log('✓ index.html acessível (status 200)');
 
   // 2. Versionamento
-  assert.ok(body.includes('id="app-footer-version">v.1.0.3</span>'), 'Rodapé principal deve ter v.1.0.3');
-  assert.ok(body.includes('sidebar-footer-version">v.1.0.3</span>'), 'Rodapé lateral deve ter v.1.0.3');
-  console.log('✓ Rodapés com versão v.1.0.3 confirmados.');
+  assert.ok(body.includes('id="app-footer-version">v.1.0.4</span>'), 'Rodapé principal deve ter v.1.0.4');
+  assert.ok(body.includes('sidebar-footer-version">v.1.0.4</span>'), 'Rodapé lateral deve ter v.1.0.4');
+  console.log('✓ Rodapés com versão v.1.0.4 confirmados.');
 
   // 3. Regra Zero Emojis
   const emojiRegex = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u;

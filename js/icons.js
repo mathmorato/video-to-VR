@@ -1,6 +1,6 @@
 /**
  * VR Video Converter
- * Version: v.1.0.3
+ * Version: v.1.0.4
  *
  * icons.js - Biblioteca de Ícones SVG Inline do VR Video Converter
  *

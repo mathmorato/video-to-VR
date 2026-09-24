@@ -1,6 +1,6 @@
 /**
  * VR Video Converter
- * Version: v.1.0.3
+ * Version: v.1.0.4
  *
  * time-estimator.js - Sistema de Estimativa de Tempo Realista e Análise de Complexidade
  *
@@ -39,6 +39,12 @@ export class TimeEstimator {
 
     this.lastRemainingSeconds = null;
     this.currentSmoothedSpeed = 0;
+
+    // Estado acumulado para evitar retrocessos de dados do Web Worker
+    this.currentFrame = 0;
+    this.currentTime = 0;
+    this.currentSpeed = 0;
+    this.maxPercent = 0;
   }
 
   /**
@@ -49,8 +55,8 @@ export class TimeEstimator {
    * @param {number} [height]
    */
   reset(totalDuration, fps, width, height) {
-    this.totalDuration = Math.max(0, totalDuration || 0);
-    this.fps = Math.max(1, fps || 30);
+    this.totalDuration = Math.max(0, totalDuration || this.totalDuration || 0);
+    this.fps = Math.max(1, fps || this.fps || 30);
     this.width = width || this.width;
     this.height = height || this.height;
 
@@ -61,6 +67,11 @@ export class TimeEstimator {
     this.remainingSamples = [];
     this.lastRemainingSeconds = null;
     this.currentSmoothedSpeed = 0;
+
+    this.currentFrame = 0;
+    this.currentTime = 0;
+    this.currentSpeed = 0;
+    this.maxPercent = 0;
   }
 
   /**
@@ -86,11 +97,6 @@ export class TimeEstimator {
     const pixelsPerSecond = pixelsPerFrame * fps;
     const totalFrames = Math.round(duration * fps);
 
-    // 4K 60fps = ~497.664.000 pixels/s (Muito pesado)
-    // 4K 30fps = ~248.832.000 pixels/s (Pesado / Muito pesado)
-    // 1080p 60fps = ~124.416.000 pixels/s (Pesado)
-    // 1080p 30fps = ~62.208.000 pixels/s (Moderado)
-    // 720p 30fps = ~27.648.000 pixels/s (Rápido)
     let classification = 'rapido';
     let classificationLabel = 'Rápido';
     let isHeavy = false;
@@ -139,9 +145,20 @@ export class TimeEstimator {
     const now = Date.now();
     const elapsedSeconds = Math.max(0, (now - this.startTime) / 1000);
 
-    const currentTime = typeof data.currentTime === 'number' ? Math.max(0, data.currentTime) : 0;
-    const frame = typeof data.frame === 'number' ? Math.max(0, data.frame) : 0;
-    const rawSpeed = typeof data.speed === 'number' ? Math.max(0, data.speed) : 0;
+    // Acumula métricas válidas emitidas pelo FFmpeg para não zerar em ticks parciais
+    if (typeof data.frame === 'number' && data.frame > 0) {
+      this.currentFrame = data.frame;
+    }
+    if (typeof data.currentTime === 'number' && data.currentTime > 0) {
+      this.currentTime = data.currentTime;
+    }
+    if (typeof data.speed === 'number' && data.speed > 0) {
+      this.currentSpeed = data.speed;
+    }
+
+    const frame = this.currentFrame;
+    const currentTime = this.currentTime;
+    const rawSpeed = this.currentSpeed;
 
     // Atualiza amostras de velocidade
     if (rawSpeed > 0) {
@@ -179,7 +196,6 @@ export class TimeEstimator {
     // Combina as estimativas de forma ponderada
     let rawEstimate = null;
     if (speedBasedEstimate !== null && frameBasedEstimate !== null) {
-      // 60% peso para velocidade declarada pelo FFmpeg, 40% para taxa de frames decorrida
       rawEstimate = speedBasedEstimate * 0.6 + frameBasedEstimate * 0.4;
     } else if (speedBasedEstimate !== null) {
       rawEstimate = speedBasedEstimate;
@@ -222,13 +238,14 @@ export class TimeEstimator {
     // Classificação de desempenho pela velocidade real
     let speedRating = 'Normal';
     let isSlow = false;
-    if (this.currentSmoothedSpeed > 0) {
-      if (this.currentSmoothedSpeed < 0.1) {
+    const effectiveSpeed = this.currentSmoothedSpeed || rawSpeed;
+    if (effectiveSpeed > 0) {
+      if (effectiveSpeed < 0.1) {
         speedRating = 'Muito lento';
         isSlow = true;
-      } else if (this.currentSmoothedSpeed < 0.5) {
+      } else if (effectiveSpeed < 0.5) {
         speedRating = 'Lento';
-      } else if (this.currentSmoothedSpeed <= 1.5) {
+      } else if (effectiveSpeed <= 1.5) {
         speedRating = 'Normal';
       } else {
         speedRating = 'Rápido';
@@ -242,13 +259,19 @@ export class TimeEstimator {
       toString() { return this.label; }
     };
 
-    // Percentual real (prioridade: duração processada / duração total)
-    let percent = 0;
-    if (this.totalDuration > 0 && currentTime > 0) {
-      percent = Math.min(99, Math.round((currentTime / this.totalDuration) * 100));
-    } else if (this.totalFrames > 0 && frame > 0) {
-      percent = Math.min(99, Math.round((frame / this.totalFrames) * 100));
+    // Percentual real: prioridade para contagem de frames processados (mais estável e preciso)
+    let calculatedPercent = 0;
+    if (this.totalFrames > 0 && frame > 0) {
+      calculatedPercent = Math.min(99, Math.round((frame / this.totalFrames) * 100));
+    } else if (this.totalDuration > 0 && currentTime > 0) {
+      calculatedPercent = Math.min(99, Math.round((currentTime / this.totalDuration) * 100));
+    } else if (typeof data.percent === 'number' && data.percent > 0) {
+      calculatedPercent = Math.min(99, Math.round(data.percent));
     }
+
+    // O percentual nunca retrocede
+    this.maxPercent = Math.max(this.maxPercent, calculatedPercent);
+    const percent = this.maxPercent;
 
     // Formatações legíveis
     const elapsedFormatted = formatDuration(elapsedSeconds);
@@ -266,9 +289,9 @@ export class TimeEstimator {
       ? formatDuration(totalEstimatedSeconds)
       : 'Calculando...';
 
-    const speedFormatted = this.currentSmoothedSpeed > 0
-      ? `${this.currentSmoothedSpeed.toFixed(this.currentSmoothedSpeed < 0.1 ? 4 : 2)}x`
-      : (rawSpeed > 0 ? `${rawSpeed.toFixed(2)}x` : '-');
+    const speedFormatted = effectiveSpeed > 0
+      ? `${effectiveSpeed.toFixed(effectiveSpeed < 0.1 ? 4 : 2)}x`
+      : '-';
 
     const frameFormatted = this.totalFrames > 0
       ? `${frame.toLocaleString('pt-BR')} / ${this.totalFrames.toLocaleString('pt-BR')}`
@@ -282,7 +305,8 @@ export class TimeEstimator {
       totalEstimatedSeconds,
       totalEstimatedFormatted,
       completionFormatted,
-      currentSpeed: this.currentSmoothedSpeed || rawSpeed,
+      speed: effectiveSpeed,
+      currentSpeed: effectiveSpeed,
       speedFormatted,
       speedRating: speedRatingObj,
       isSlow,

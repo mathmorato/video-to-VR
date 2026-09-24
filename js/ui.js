@@ -1,6 +1,6 @@
 /**
  * VR Video Converter
- * Version: v.1.0.3
+ * Version: v.1.0.4
  *
  * ui.js - Gerenciador de interface de usuário e eventos DOM
  */
@@ -21,6 +21,7 @@ export class UIManager {
   constructor() {
     this.elements = {};
     this.currentMetadata = null;
+    this.currentConversionState = 'idle';
     this._cacheElements();
   }
 
@@ -418,6 +419,31 @@ export class UIManager {
   setConversionState(state, customMessage = '') {
     const iconWrap = this.elements.progressIconWrap;
     if (!iconWrap) return;
+
+    const spinningStates = ['loading', 'processing', 'slow', 'finishing'];
+    const isSpinningState = spinningStates.includes(state);
+    const wasSpinningState = spinningStates.includes(this.currentConversionState);
+
+    // Se a ampulheta já está girando e o novo estado também é de rotação,
+    // apenas atualizamos a mensagem de status sem recriar o elemento SVG no DOM.
+    // Isso impede que a animação CSS (conversion-hourglass-spin) trave ou reinicie do zero.
+    if (isSpinningState && wasSpinningState) {
+      this.currentConversionState = state;
+      if (customMessage) {
+        this.updateStatus(customMessage);
+      }
+      return;
+    }
+
+    // Se o estado não mudou, apenas atualiza a mensagem textual
+    if (this.currentConversionState === state) {
+      if (customMessage) {
+        this.updateStatus(customMessage);
+      }
+      return;
+    }
+
+    this.currentConversionState = state;
 
     switch (state) {
       case 'loading':

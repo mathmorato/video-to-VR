@@ -66,8 +66,26 @@ async function testV6() {
   assert.ok(html.includes('notice-slow-warning'), 'Deve conter caixa de aviso notice-slow-warning com SVG');
   console.log('✓ HTML V6: todos os 5 cards e IDs de métricas confirmados.');
 
+  // 5. Testa melhorias da v.1.0.4: cálculo de progresso por frames e espaçamento entre seções
+  assert.ok(css.includes('.card + .card') && css.includes('.progress-card'), 'Deve conter separação explícita entre seções de cards');
+  
+  const { TimeEstimator } = await import('../js/time-estimator.js');
+  const estimator = new TimeEstimator({ duration: 238.53, fps: 30, width: 3840, height: 2160 });
+  
+  // Simula o caso real do usuário: 1631 frames de 7156
+  const update1 = estimator.update({ frame: 1631, speed: 0.0217 });
+  assert.strictEqual(update1.percent, 23, '1631 quadros de 7156 deve resultar exatamente em 23%');
+  assert.ok(update1.speed > 0, 'Velocidade deve ser retornada');
+  assert.strictEqual(update1.frame, 1631, 'Quadro atual deve ser preservado');
+
+  // Simula tick subsequente com dados parciais (não pode resetar percentual nem velocidade)
+  const update2 = estimator.update({});
+  assert.strictEqual(update2.percent, 23, 'Percentual não pode regredir em ticks parciais');
+  assert.strictEqual(update2.frame, 1631, 'Quadro atual deve ser mantido');
+  console.log('✓ v.1.0.4: cálculo real de progresso por frames e espaçamento entre cards validados.');
+
   console.log('\n====================================================');
-  console.log('   TODOS OS TESTES DA VERSÃO 6 FORAM APROVADOS!      ');
+  console.log('   TODOS OS TESTES DA VERSÃO 6.1 FORAM APROVADOS!    ');
   console.log('====================================================');
 }
 

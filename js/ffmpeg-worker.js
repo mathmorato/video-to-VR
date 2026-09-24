@@ -1,6 +1,6 @@
 /**
  * VR Video Converter
- * Version: v.1.0.3
+ * Version: v.1.0.4
  *
  * ffmpeg-worker.js - Web Worker dedicado para processamento FFmpeg WebAssembly
  *
@@ -201,6 +201,23 @@ async function initFFmpeg(basePath = '../lib/ffmpeg/') {
       fatal: true
     });
   }
+}
+
+/**
+ * Converte string de tempo HH:MM:SS.ms ou SS em segundos numéricos
+ * @param {string} timeStr
+ * @returns {number}
+ */
+function parseTime(timeStr) {
+  if (!timeStr) return 0;
+  const parts = timeStr.trim().split(':');
+  if (parts.length === 3) {
+    const hours = parseFloat(parts[0]) || 0;
+    const minutes = parseFloat(parts[1]) || 0;
+    const seconds = parseFloat(parts[2]) || 0;
+    return hours * 3600 + minutes * 60 + seconds;
+  }
+  return parseFloat(timeStr) || 0;
 }
 
 /**
