@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Conversor de vídeos 2D, 180° e 360° para Realidade Virtual (VR), Google Cardboard e Side-by-Side (SBS) com processamento 100% local via WebAssembly.">
+  <title>VR Video Converter - Conversor de Vídeos para VR & Google Cardboard</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-wrapper">
+    <!-- CABEÇALHO -->
+    <header class="app-header">
+      <div class="header-content">
+        <div class="logo-area">
+          <img src="assets/icons/vr-headset.svg" alt="VR Logo" class="app-logo-icon">
+          <div>
+            <h1 class="app-title">VR VIDEO CONVERTER</h1>
+            <p class="app-subtitle">Conversor profissional de vídeos para VR, Google Cardboard e Side-by-Side</p>
+          </div>
+        </div>
+        <div class="badge-offline">
+          <span class="pulse-dot"></span>
+          <span id="ffmpeg-global-status">FFmpeg: não carregado</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <!-- ÁREA DE UPLOAD (DRAG & DROP) -->
+      <section class="card upload-card" id="section-upload">
+        <div class="dropzone" id="dropzone">
+          <img src="assets/icons/upload.svg" alt="Upload" class="upload-icon">
+          <h2>Arraste seu vídeo aqui</h2>
+          <p class="dropzone-hint">Formatos suportados: MP4, MOV, WEBM, MKV, AVI, M4V (processamento direto no seu navegador)</p>
+          <button type="button" class="btn btn-primary" id="select-btn">
+            <img src="assets/icons/upload.svg" alt="" class="btn-icon">
+            Selecionar vídeo
+          </button>
+          <input type="file" id="file-input" accept="video/*" class="visually-hidden">
+        </div>
+      </section>
+
+      <!-- INFORMAÇÕES E PREVIEW DO VÍDEO -->
+      <section class="card info-card" id="section-info" style="display: none;">
+        <h2 class="section-title">
+          <span class="icon-wrap">ℹ️</span> Informações e Preview do Vídeo
+        </h2>
+
+        <div class="info-preview-grid">
+          <div class="video-preview-wrapper">
+            <video id="input-preview-video" controls playsinline class="video-player"></video>
+            <span class="preview-badge">Original</span>
+          </div>
+
+          <div class="metadata-wrapper">
+            <div class="metadata-grid">
+              <div class="meta-item">
+                <span class="meta-label">Arquivo:</span>
+                <span class="meta-value" id="info-file-name">-</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Tamanho:</span>
+                <span class="meta-value" id="info-file-size">-</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Formato:</span>
+                <span class="meta-value" id="info-format">-</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Duração:</span>
+                <span class="meta-value" id="info-duration">-</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Resolução:</span>
+                <span class="meta-value" id="info-resolution">-</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Taxa de Quadros:</span>
+                <span class="meta-value" id="info-fps">-</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Proporção:</span>
+                <span class="meta-value" id="info-aspect">-</span>
+              </div>
+            </div>
+
+            <div class="notice-box notice-suggestion" id="info-detection-notice" style="display: none;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CONFIGURAÇÃO DA CONVERSÃO VR -->
+      <section class="card config-card" id="section-config" style="display: none;">
+        <h2 class="section-title">
+          <span class="icon-wrap">⚙️</span> Configurações de Saída VR
+        </h2>
+
+        <!-- PRESET SELECTOR -->
+        <div class="preset-banner">
+          <div class="form-group preset-group">
+            <label for="select-preset">Perfil / Preset:</label>
+            <select id="select-preset" class="form-select select-featured">
+              <option value="cardboard">Google Cardboard 2D (Recomendado)</option>
+              <option value="cardboard_180">Google Cardboard 180° VR</option>
+              <option value="cardboard_360">Google Cardboard 360° VR</option>
+              <option value="sbs_half">SBS Half (Half Side-by-Side)</option>
+              <option value="sbs_full">SBS Full (Full Side-by-Side)</option>
+              <option value="top_bottom">Top-and-Bottom (Acima / Abaixo)</option>
+              <option value="vr180_mono">VR 180° Monoscópico</option>
+              <option value="vr180_stereo">VR 180° Estereoscópico (SBS)</option>
+              <option value="vr360_mono">VR 360° Monoscópico (Panorama 2:1)</option>
+              <option value="vr360_stereo">VR 360° Estéreo (Side-by-Side)</option>
+              <option value="vr360_tb">VR 360° Estéreo (Top-and-Bottom)</option>
+              <option value="vr4k">VR 4K Ultra HD (3840 × 2160)</option>
+              <option value="custom">Personalizado (Manual)</option>
+            </select>
+          </div>
+          <p class="preset-description" id="preset-description">
+            Otimizado para smartphones e headsets Google Cardboard (H.264 + AAC + SBS Half).
+          </p>
+        </div>
+
+        <div class="config-grid">
+          <!-- TIPO DE ENTRADA -->
+          <div class="form-group">
+            <label for="select-video-type">Tipo de vídeo de entrada:</label>
+            <select id="select-video-type" class="form-select">
+              <option value="2d">2D normal (Plano)</option>
+              <option value="180">180° (Hemisférico)</option>
+              <option value="360">360° (Panorâmico)</option>
+            </select>
+          </div>
+
+          <!-- FORMATO DE SAÍDA -->
+          <div class="form-group">
+            <label for="select-output-format">Formato de saída VR:</label>
+            <select id="select-output-format" class="form-select">
+              <option value="sbs_half">SBS Half (Lado-a-Lado Dividido)</option>
+              <option value="sbs_full">SBS Full (Lado-a-Lado Completo)</option>
+              <option value="top_bottom">Top-and-Bottom (Superior / Inferior)</option>
+              <option value="cardboard">Google Cardboard Preset</option>
+              <option value="vr180">VR 180° SBS</option>
+              <option value="vr360">VR 360° SBS</option>
+            </select>
+          </div>
+
+          <!-- RESOLUÇÃO -->
+          <div class="form-group">
+            <label for="select-resolution">Resolução de saída:</label>
+            <select id="select-resolution" class="form-select">
+              <option value="original">Original da entrada</option>
+              <option value="1280x720">1280 × 720 (HD 720p)</option>
+              <option value="1920x1080">1920 × 1080 (Full HD 1080p)</option>
+              <option value="2560x1440">2560 × 1440 (2K QHD)</option>
+              <option value="3840x2160">3840 × 2160 (4K UHD)</option>
+              <option value="custom">Personalizado...</option>
+            </select>
+          </div>
+
+          <!-- RESOLUÇÃO PERSONALIZADA -->
+          <div class="form-group-full custom-res-grid" id="custom-res-wrapper" style="display: none;">
+            <div class="form-group">
+              <label for="custom-width">Largura (px):</label>
+              <input type="number" id="custom-width" class="form-input" placeholder="Ex: 1920" step="2" min="128">
+            </div>
+            <div class="form-group">
+              <label for="custom-height">Altura (px):</label>
+              <input type="number" id="custom-height" class="form-input" placeholder="Ex: 1080" step="2" min="128">
+            </div>
+          </div>
+
+          <!-- TAXA DE QUADROS (FPS) -->
+          <div class="form-group">
+            <label for="select-fps">Taxa de quadros (FPS):</label>
+            <select id="select-fps" class="form-select">
+              <option value="original">Original</option>
+              <option value="24">24 FPS (Cinema)</option>
+              <option value="25">25 FPS (PAL)</option>
+              <option value="30">30 FPS (Padrão)</option>
+              <option value="50">50 FPS</option>
+              <option value="60">60 FPS (Fluido)</option>
+            </select>
+          </div>
+
+          <!-- CODEC -->
+          <div class="form-group">
+            <label for="select-codec">Codec de Vídeo:</label>
+            <select id="select-codec" class="form-select">
+              <option value="h264">H.264 / AVC (Máxima Compatibilidade)</option>
+              <option value="h265">H.265 / HEVC</option>
+              <option value="vp9">VP9 (WebM)</option>
+            </select>
+          </div>
+
+          <!-- ÁUDIO -->
+          <div class="form-group">
+            <label for="select-audio">Faixa de Áudio:</label>
+            <select id="select-audio" class="form-select">
+              <option value="keep">Manter áudio (AAC estéreo)</option>
+              <option value="remove">Remover áudio (Sem som)</option>
+            </select>
+          </div>
+
+          <!-- QUALIDADE -->
+          <div class="form-group">
+            <label for="select-quality">Qualidade de Codificação:</label>
+            <select id="select-quality" class="form-select">
+              <option value="auto">Automática (Equilibrada)</option>
+              <option value="low">Compatível (Ultrarrápida)</option>
+              <option value="medium">Equilibrada (Recomendada)</option>
+              <option value="high">Alta (Alta Fidelidade VR)</option>
+              <option value="very_high">Máxima (4K / Ultra Nitidez)</option>
+              <option value="custom">Personalizada (CRF)...</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="custom-quality-wrapper" style="display: none;">
+            <label for="custom-crf">Fator de Taxa Constante (CRF 0-51):</label>
+            <input type="number" id="custom-crf" class="form-input" min="0" max="51" value="23">
+            <small class="hint-text">Valores menores significam maior qualidade e arquivo maior.</small>
+          </div>
+        </div>
+
+        <!-- SEÇÃO: CONFIGURAÇÃO VR AVANÇADA (SEÇÃO 4 DA V3) -->
+        <div class="advanced-vr-section" id="section-advanced-vr">
+          <div class="advanced-header">
+            <span class="icon-wrap">🧭</span>
+            <h3>CONFIGURAÇÃO VR AVANÇADA</h3>
+            <span class="advanced-badge">Versão 3</span>
+          </div>
+
+          <div class="config-grid advanced-grid">
+            <!-- PROJEÇÃO (180° e 360°) -->
+            <div class="form-group" id="group-projection">
+              <label for="select-projection">Projeção da Imagem:</label>
+              <select id="select-projection" class="form-select">
+                <option value="equirectangular">Equirretangular (Padrão 2:1)</option>
+                <option value="fisheye">Fisheye (Olho de Peixe - Experimental)</option>
+                <option value="dual_fisheye">Dual Fisheye (Experimental)</option>
+                <option value="unknown">Desconhecida</option>
+              </select>
+            </div>
+
+            <!-- ESTEREOSCOPIA DE ENTRADA -->
+            <div class="form-group" id="group-stereoscopy">
+              <label for="select-stereoscopy">Estereoscopia de Entrada:</label>
+              <select id="select-stereoscopy" class="form-select">
+                <option value="mono">Monoscópico (Única imagem)</option>
+                <option value="sbs">Side-by-Side (SBS)</option>
+                <option value="tb">Top-and-Bottom (Acima/Abaixo)</option>
+              </select>
+            </div>
+
+            <!-- CAMPO DE VISÃO (FOV) PARA 180° -->
+            <div class="form-group" id="group-fov" style="display: none;">
+              <label for="input-fov">Campo de Visão (FOV Graus):</label>
+              <input type="number" id="input-fov" class="form-input" value="180" min="60" max="360" step="5">
+            </div>
+
+            <!-- CALIBRAÇÃO FISHEYE (EXPERIMENTAL - SEÇÃO 19) -->
+            <div class="form-group-full fisheye-calibration-card" id="group-fisheye-calib" style="display: none;">
+              <h4>Calibração de Projeção Fisheye (Experimental)</h4>
+              <p class="hint-text">Ajuste os parâmetros ópticos da lente esférica se a imagem de entrada for uma captura circular fisheye:</p>
+              <div class="calib-inputs-grid">
+                <div>
+                  <label for="fisheye-center-x">Centro X (%):</label>
+                  <input type="number" id="fisheye-center-x" class="form-input" value="50" min="0" max="100">
+                </div>
+                <div>
+                  <label for="fisheye-center-y">Centro Y (%):</label>
+                  <input type="number" id="fisheye-center-y" class="form-input" value="50" min="0" max="100">
+                </div>
+                <div>
+                  <label for="fisheye-radius">Raio (%):</label>
+                  <input type="number" id="fisheye-radius" class="form-input" value="50" min="10" max="100">
+                </div>
+                <div>
+                  <label for="fisheye-lens-fov">FOV da Lente (°):</label>
+                  <input type="number" id="fisheye-lens-fov" class="form-input" value="180" min="90" max="220">
+                </div>
+              </div>
+            </div>
+
+            <!-- PAINEL METADADOS VR (SEÇÃO 31) -->
+            <div class="form-group-full vr-metadata-panel" id="vr-metadata-panel">
+              <span class="meta-panel-title">📡 Metadados VR Configurados:</span>
+              <div class="vr-meta-tags">
+                <span class="tag-item" id="tag-meta-type">Tipo: 2D</span>
+                <span class="tag-item" id="tag-meta-proj">Projeção: Equirretangular</span>
+                <span class="tag-item" id="tag-meta-stereo">Estereoscopia: Mono</span>
+                <span class="tag-item" id="tag-meta-layout">Layout Saída: SBS Half</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AVISOS EXPLICATIVOS INTELIGENTES (SEÇÃO 35) -->
+        <div class="notice-box notice-info" id="stereoscopy-notice" style="display: none;"></div>
+        <div class="notice-box notice-warning" id="projection-notice" style="display: none;"></div>
+        <div class="notice-box notice-warning" id="upscale-notice" style="display: none;"></div>
+
+        <!-- BOTÃO PRINCIPAL DE CONVERSÃO -->
+        <div class="action-bar">
+          <button type="button" class="btn btn-action-large" id="btn-convert" disabled>
+            <img src="assets/icons/vr-headset.svg" alt="" class="btn-icon">
+            CONVERTER PARA VR
+          </button>
+        </div>
+      </section>
+
+      <!-- PROCESSO E PROGRESSO REAL -->
+      <section class="card progress-card" id="section-progress" style="display: none;">
+        <h2 class="section-title">
+          <span class="icon-wrap">⏳</span> Progresso da Conversão
+        </h2>
+
+        <div class="progress-container">
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="progress-bar-fill"></div>
+          </div>
+          <div class="progress-header">
+            <span class="status-msg" id="progress-status-text">Inicializando...</span>
+            <span class="percent-label" id="progress-percent">0%</span>
+          </div>
+        </div>
+
+        <!-- MÉTRICAS REAIS -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <span class="metric-title">Tempo Decorrido</span>
+            <span class="metric-value" id="progress-elapsed">00:00</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-title">Tempo Restante Est.</span>
+            <span class="metric-value" id="progress-remaining">--:--</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-title">Velocidade FFmpeg</span>
+            <span class="metric-value" id="progress-speed">-</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-title">Quadro Atual</span>
+            <span class="metric-value" id="progress-frame">-</span>
+          </div>
+        </div>
+
+        <!-- LOG CONSOLE -->
+        <div class="log-accordion">
+          <button type="button" class="btn-text" id="log-toggle-btn">Mostrar console FFmpeg</button>
+          <div class="log-container" id="log-container" style="display: none;">
+            <pre class="log-output" id="log-output"></pre>
+          </div>
+        </div>
+
+        <!-- BOTÃO CANCELAR -->
+        <div class="cancel-bar">
+          <button type="button" class="btn btn-danger" id="btn-cancel">
+            Cancelar Conversão
+          </button>
+        </div>
+      </section>
+
+      <!-- RESULTADO E DOWNLOAD -->
+      <section class="card result-card" id="section-result" style="display: none;">
+        <div class="result-header">
+          <img src="assets/icons/cardboard.svg" alt="Cardboard" class="result-icon">
+          <h2 class="result-title">CONVERSÃO CONCLUÍDA</h2>
+          <p class="result-subtitle">Seu vídeo para Realidade Virtual foi gerado com sucesso!</p>
+        </div>
+
+        <div class="info-preview-grid">
+          <!-- PREVIEW DO VÍDEO CONVERTIDO -->
+          <div class="video-preview-wrapper">
+            <video id="result-preview-video" controls playsinline class="video-player"></video>
+            <span class="preview-badge badge-result">VR Side-by-Side</span>
+          </div>
+
+          <!-- RESUMO DOS DADOS GERADOS -->
+          <div class="metadata-wrapper">
+            <div class="metadata-grid">
+              <div class="meta-item">
+                <span class="meta-label">Arquivo:</span>
+                <span class="meta-value" id="result-file-name">-</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Formato:</span>
+                <span class="meta-value" id="result-format">-</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Resolução:</span>
+                <span class="meta-value" id="result-resolution">-</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Duração:</span>
+                <span class="meta-value" id="result-duration">-</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Tamanho:</span>
+                <span class="meta-value" id="result-size">-</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Codec:</span>
+                <span class="meta-value" id="result-codec">-</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Layout:</span>
+                <span class="meta-value" id="result-layout">-</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AÇÕES DO RESULTADO -->
+        <div class="result-actions">
+          <button type="button" class="btn btn-download-hero" id="btn-download" disabled>
+            <img src="assets/icons/download.svg" alt="" class="btn-icon">
+            BAIXAR VÍDEO
+          </button>
+
+          <div class="secondary-actions-group">
+            <button type="button" class="btn btn-secondary" id="btn-open-vr-viewer">
+              <img src="assets/icons/vr-headset.svg" alt="" class="btn-icon">
+              Visualizar em VR
+            </button>
+
+            <button type="button" class="btn btn-secondary" id="btn-open-cardboard">
+              <img src="assets/icons/cardboard.svg" alt="" class="btn-icon">
+              Modo Cardboard
+            </button>
+
+            <button type="button" class="btn btn-outline" id="btn-new-conversion">
+              Nova Conversão
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- MODAL DE VISUALIZAÇÃO VR E CARDBOARD (WEBGL) -->
+    <div class="vr-modal-backdrop" id="vr-modal" style="display: none;">
+      <div class="vr-modal-content">
+        <div class="vr-modal-header">
+          <div class="vr-modal-title">
+            <img src="assets/icons/vr-headset.svg" alt="" class="vr-icon-sm">
+            <span>Player VR & Google Cardboard</span>
+            <span class="vr-view-mode-badge" id="vr-view-mode-badge">360° Esférico</span>
+          </div>
+          <div class="vr-modal-controls">
+            <button type="button" class="btn-sm" id="vr-cardboard-toggle" title="Alternar visão estéreo dividida">
+              Cardboard SBS
+            </button>
+            <button type="button" class="btn-sm" id="vr-gyro-toggle" title="Ativar giroscópio">
+              Giroscópio
+            </button>
+            <button type="button" class="btn-sm" id="vr-reset-view-btn" title="Resetar orientação e zoom da câmera">
+              Resetar Visão
+            </button>
+            <button type="button" class="btn-sm" id="vr-webxr-btn" style="display: none;" title="Entrar em Realidade Virtual">
+              Entrar em VR
+            </button>
+            <button type="button" class="btn-modal-close" id="vr-modal-close" aria-label="Fechar">&times;</button>
+          </div>
+        </div>
+
+        <!-- BARRA DE CONTROLES AVANÇADOS DO VIEWER (SEÇÃO 58) -->
+        <div class="vr-viewer-toolbar">
+          <div class="vr-toolbar-group">
+            <label for="vr-zoom-slider" class="vr-toolbar-label">Zoom / FOV:</label>
+            <input type="range" id="vr-zoom-slider" class="vr-slider" min="30" max="110" value="75" step="1">
+            <span class="vr-toolbar-val" id="vr-zoom-val">75°</span>
+          </div>
+          <div class="vr-toolbar-hint">
+            <span>🖱️ Arraste para olhar ao redor &bull; 📜 Scroll para Zoom &bull; 📱 Mova o celular</span>
+          </div>
+        </div>
+
+        <div class="vr-canvas-wrapper" id="vr-canvas-container">
+          <!-- Canvas WebGL injetado dinamicamente -->
+        </div>
+
+        <div class="vr-orientation-notice" id="vr-orientation-prompt" style="display: none;">
+          📱 Coloque o telefone no Google Cardboard. Toque ou mova para navegar.
+        </div>
+      </div>
+    </div>
+
+    <!-- RODAPÉ PRINCIPAL (SEÇÃO 7) -->
+    <footer class="app-main-footer">
+      <div class="footer-content">
+        <p>VR Video Converter &bull; Conversão local com FFmpeg WebAssembly &bull; Seus arquivos não saem do seu computador.</p>
+        <div class="footer-version-tag">
+          <span>Versão: </span>
+          <span id="app-footer-version">v.1.0.1</span>
+        </div>
+      </div>
+      <!-- Rodapé lateral / sidebar para conformidade de governança -->
+      <div class="sidebar-footer" style="display: none;">
+        <span class="sidebar-footer-version">v.1.0.1</span>
+      </div>
+    </footer>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

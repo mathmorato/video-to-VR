@@ -1,0 +1,22 @@
+{
+  "name": "vr-video-converter",
+  "version": "1.0.1",
+  "description": "Conversor de vídeos 2D, 180° e 360° para Realidade Virtual (VR), Google Cardboard e Side-by-Side (SBS) com processamento 100% local via WebAssembly.",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "test": "node tests/test_v3_suite.js"
+  },
+  "keywords": [
+    "vr",
+    "virtual-reality",
+    "ffmpeg",
+    "webassembly",
+    "google-cardboard",
+    "side-by-side",
+    "sbs",
+    "vr180",
+    "vr360"
+  ],
+  "author": "Matheus Morato",
+  "license": "MIT"
+}

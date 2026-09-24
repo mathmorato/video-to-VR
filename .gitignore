@@ -1,0 +1,28 @@
+# Dependências
+node_modules/
+
+# Logs e arquivos temporários
+*.log
+*.tmp
+*.temp
+temp/
+tmp/
+output/
+outputs/
+converted/
+tests/out_*
+tests/output_*
+
+# Cópia temporária/local de WASM (o binário oficial e permanente fica em lib/ffmpeg/ffmpeg-core.wasm)
+js/ffmpeg-core.wasm
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE e editores
+.vscode/
+.idea/
+*.swp
+*.swo
