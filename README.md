@@ -1,4 +1,4 @@
-# VR Video Converter (v.1.0.2)
+# VR Video Converter (v.1.0.3)
 
 Aplicação web client-side completa, profissional e de alto desempenho para conversão e visualização de vídeos convencionais (**2D**), vídeos hemisféricos (**180°**) e vídeos panorâmicos (**360°**) em formatos adequados para **Realidade Virtual (VR)**, **Google Cardboard**, **Side-by-Side (SBS Half / Full)** e **Top-and-Bottom (Over/Under)**.
 
@@ -8,8 +8,8 @@ O processamento é **100% local e offline**, executado inteiramente no navegador
 
 ## Sumário
 
-- [O Que Há de Novo na Versão 5 (v.1.0.2)](#-o-que-há-de-novo-na-versão-5-v102)
-- [O Que Há de Novo na Versão 3 e 4](#-histórico-de-versões-anteriores)
+- [O Que Há de Novo na Versão 6 (v.1.0.3)](#-o-que-há-de-novo-na-versão-6-v103)
+- [Histórico de Versões Anteriores (v.1.0.2 / v.1.0.1)](#-histórico-de-versões-anteriores)
 - [Fundamentos Conceituais Obrigatórios](#-fundamentos-conceituais-obrigatórios)
   - [Projeção vs. Layout Estereoscópico](#1-projeção-geométrica-vs-layout-estereoscópico)
   - [Estereoscopia (Mono, SBS, Top/Bottom)](#2-estereoscopia-mono-vs-estéreo)
@@ -36,7 +36,30 @@ O processamento é **100% local e offline**, executado inteiramente no navegador
 
 ---
 
-## ⚡ O Que Há de Novo na Versão 5 (v.1.0.2)
+## ⚡ O Que Há de Novo na Versão 6 (v.1.0.3)
+
+1. **Ampulheta SVG Girando de Verdade (`@keyframes conversion-hourglass-spin`)**:
+   - Animação contínua em CSS aplicada à classe `.conversion-hourglass.is-active`, girando ininterruptamente a `1.5s linear infinite` durante todo o ciclo ativo da conversão.
+   - Vinculada aos estados reais de conversão: gira continuamente durante `loading`, `processing`, `slow` e `finishing`.
+   - Para imediatamente e altera para o respectivo ícone em `completed` (sucesso), `error` (erro) e `cancelled` (cancelamento).
+   - Suporte a acessibilidade (`aria-hidden="true"`) e `@media (prefers-reduced-motion: reduce)`.
+
+2. **Separação Visual Clara e Organização dos Cards de Progresso**:
+   - Eliminação da aparência de bloco único colado: introduzido espaçamento evidente com `gap: 16px`.
+   - Estrutura hierárquica em duas linhas:
+     - **Linha 1 (Tempo - 3 Cards)**: Tempo Decorrido, Tempo Restante Estimado e Tempo Total Estimado.
+     - **Linha 2 (Desempenho e Frames - 2 Cards)**: Velocidade FFmpeg (com selo de status) e Quadro Atual.
+   - Cada card possui sua própria borda (`border: 1px solid rgba(255, 255, 255, 0.12)`), fundo contrastante `#0d121d`, cantos arredondados (`border-radius: 12px`), sombra suave (`box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3)`) e hover discreto (`translateY(-2px)`).
+   - Tipografia refinada: ícone SVG alinhado ao título do card e valores com destaque tipográfico (`font-size: 1.25rem; font-weight: 700`).
+
+3. **Alerta de Processamento Lento Aprimorado**:
+   - Caixa de aviso com ícone SVG inline vetorial amarelo e mensagem discreta sem emojis: `"Processamento lento detectado. A conversão continua normalmente."`
+
+---
+
+## 🌟 Histórico de Versões Anteriores
+
+### Versão 5 (v.1.0.2)
 
 1. **Estimativa de Tempo Realista e Suavizada**:
    - Algoritmo baseado nos dados reais do FFmpeg: calcula simultaneamente o tempo restante por **velocidade FFmpeg (`speed=...x`)** e por **taxa de processamento de quadros (`frames / elapsed`)**.

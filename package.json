@@ -1,6 +1,6 @@
 {
   "name": "vr-video-converter",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Conversor de vídeos 2D, 180° e 360° para Realidade Virtual (VR), Google Cardboard e Side-by-Side (SBS) com processamento 100% local via WebAssembly.",
   "scripts": {
     "start": "python -m http.server 8000",

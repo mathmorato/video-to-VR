@@ -1,6 +1,6 @@
 /**
  * VR Video Converter
- * Version: v.1.0.2
+ * Version: v.1.0.3
  *
  * ffmpeg.js - Gerenciador do FFmpeg Web Worker na thread principal
  * Responsável por gerenciar o ciclo de vida do Worker, timeouts, cancelamento,

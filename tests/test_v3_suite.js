@@ -104,9 +104,9 @@ async function main() {
   assert.strictEqual(invEmptyFile.valid, false, 'Arquivo de 0 bytes deve ser recusado');
   console.log('✓ validateVRConfiguration: validações e avisos contextuais validados com sucesso.');
 
-  // 6. Testes de Validação de Versão e TimeEstimator (Versão 5)
+  // 6. Testes de Validação de Versão e TimeEstimator (Versão 6)
   const { APP_VERSION } = await import('../js/version.js');
-  assert.strictEqual(APP_VERSION, 'v.1.0.2', 'Versão deve ser exatamente v.1.0.2');
+  assert.strictEqual(APP_VERSION, 'v.1.0.3', 'Versão deve ser exatamente v.1.0.3');
   console.log(`✓ APP_VERSION: validada como ${APP_VERSION} no módulo central.`);
 
   const { TimeEstimator } = await import('../js/time-estimator.js');

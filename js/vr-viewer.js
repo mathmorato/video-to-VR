@@ -1,6 +1,6 @@
 /**
  * VR Video Converter
- * Version: v.1.0.2
+ * Version: v.1.0.3
  *
  * vr-viewer.js - Visualizador Interativo VR e Modo Google Cardboard (WebGL)
  * Implementa renderização WebGL para panoramas 360°, hemisférios 180° e planos SBS/TB,

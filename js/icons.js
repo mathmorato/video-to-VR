@@ -1,6 +1,6 @@
 /**
  * VR Video Converter
- * Version: v.1.0.2
+ * Version: v.1.0.3
  *
  * icons.js - Biblioteca de Ícones SVG Inline do VR Video Converter
  *
@@ -21,34 +21,68 @@ export function createSvg(innerPaths, className = 'ui-icon', size = 20, ariaLabe
   return `<svg class="${className}" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ${ariaAttr}>${innerPaths}</svg>`;
 }
 
+/**
+ * Normaliza argumentos para className e size
+ */
+function resolveClassAndSize(defaultClass, defaultSize, arg1, arg2) {
+  if (typeof arg1 === 'number') {
+    return { className: defaultClass, size: arg1 };
+  }
+  return { className: arg1 || defaultClass, size: arg2 || defaultSize };
+}
+
 // Ampulheta para monitoramento de conversão em tempo real
-export const SVG_HOURGLASS = (className = 'conversion-hourglass', isSpinning = true) =>
-  createSvg(
-    '<path d="M5 22h14M5 2h14M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" />',
-    `${className} ${isSpinning ? 'is-spinning' : ''}`,
-    24,
-    'Processando'
-  );
+export function SVG_HOURGLASS(options = true, maybeSize = 24) {
+  let isActive = true;
+  let size = 24;
+  let className = 'conversion-hourglass';
+
+  if (typeof options === 'boolean') {
+    isActive = options;
+    size = maybeSize || 24;
+  } else if (typeof options === 'object' && options !== null) {
+    isActive = options.isActive ?? options.isSpinning ?? options.spinning ?? true;
+    size = options.size || 24;
+    className = options.className || 'conversion-hourglass';
+  } else if (typeof options === 'string') {
+    className = options;
+    isActive = maybeSize !== false;
+  }
+
+  const activeClasses = isActive ? 'is-active is-spinning' : '';
+  const fullClass = `${className} ${activeClasses}`.trim();
+  return `<svg class="${fullClass}" id="conversion-hourglass" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 22h14M5 2h14M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></svg>`;
+}
 
 // Sucesso / Concluído
-export const SVG_CHECK = (className = 'ui-icon text-success', size = 20) =>
-  createSvg('<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>', className, size, 'Sucesso');
+export const SVG_CHECK = (arg1 = 'ui-icon text-success', arg2 = 20) => {
+  const { className, size } = resolveClassAndSize('ui-icon text-success', 20, arg1, arg2);
+  return createSvg('<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>', className, size, 'Sucesso');
+};
 
 // Erro
-export const SVG_ERROR = (className = 'ui-icon text-danger', size = 20) =>
-  createSvg('<polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>', className, size, 'Erro');
+export const SVG_ERROR = (arg1 = 'ui-icon text-danger', arg2 = 20) => {
+  const { className, size } = resolveClassAndSize('ui-icon text-danger', 20, arg1, arg2);
+  return createSvg('<polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>', className, size, 'Erro');
+};
 
 // Alerta / Atenção
-export const SVG_WARNING = (className = 'ui-icon text-warning', size = 20) =>
-  createSvg('<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>', className, size, 'Atenção');
+export const SVG_WARNING = (arg1 = 'ui-icon text-warning', arg2 = 20) => {
+  const { className, size } = resolveClassAndSize('ui-icon text-warning', 20, arg1, arg2);
+  return createSvg('<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>', className, size, 'Atenção');
+};
 
 // Informação
-export const SVG_INFO = (className = 'ui-icon text-info', size = 20) =>
-  createSvg('<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>', className, size, 'Informação');
+export const SVG_INFO = (arg1 = 'ui-icon text-info', arg2 = 20) => {
+  const { className, size } = resolveClassAndSize('ui-icon text-info', 20, arg1, arg2);
+  return createSvg('<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>', className, size, 'Informação');
+};
 
 // Sugestão / Dica
-export const SVG_LIGHTBULB = (className = 'ui-icon text-warning', size = 20) =>
-  createSvg('<path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5.76.76 1.23 1.52 1.41 2.5"/>', className, size, 'Dica');
+export const SVG_LIGHTBULB = (arg1 = 'ui-icon text-warning', arg2 = 20) => {
+  const { className, size } = resolveClassAndSize('ui-icon text-warning', 20, arg1, arg2);
+  return createSvg('<path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5.76.76 1.23 1.52 1.41 2.5"/>', className, size, 'Dica');
+};
 
 // Bússola / Calibração
 export const SVG_COMPASS = (className = 'ui-icon', size = 20) =>
@@ -66,7 +100,7 @@ export const SVG_SETTINGS = (className = 'ui-icon', size = 20) =>
 export const SVG_CLOCK = (className = 'ui-icon', size = 20) =>
   createSvg('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>', className, size, 'Tempo');
 
-// Velocímetro / Velocidade
+// Velocímetro / Desempenho
 export const SVG_SPEED = (className = 'ui-icon', size = 20) =>
   createSvg('<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>', className, size, 'Velocidade');
 
@@ -75,8 +109,10 @@ export const SVG_FRAME = (className = 'ui-icon', size = 20) =>
   createSvg('<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18M17 3v18M3 7.5h4M3 12h18M3 16.5h4M17 7.5h4M17 16.5h4"/>', className, size, 'Quadro');
 
 // Cancelar / Fechar
-export const SVG_CANCEL = (className = 'ui-icon', size = 20) =>
-  createSvg('<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>', className, size, 'Cancelar');
+export const SVG_CANCEL = (arg1 = 'ui-icon text-danger', arg2 = 20) => {
+  const { className, size } = resolveClassAndSize('ui-icon text-danger', 20, arg1, arg2);
+  return createSvg('<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>', className, size, 'Cancelar');
+};
 
 // Upload
 export const SVG_UPLOAD = (className = 'ui-icon', size = 20) =>

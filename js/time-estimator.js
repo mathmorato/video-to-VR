@@ -1,6 +1,6 @@
 /**
  * VR Video Converter
- * Version: v.1.0.2
+ * Version: v.1.0.3
  *
  * time-estimator.js - Sistema de Estimativa de Tempo Realista e Análise de Complexidade
  *

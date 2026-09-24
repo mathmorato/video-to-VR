@@ -1,6 +1,6 @@
 /**
  * VR Video Converter
- * Version: v.1.0.2
+ * Version: v.1.0.3
  *
  * ui.js - Gerenciador de interface de usuário e eventos DOM
  */
@@ -421,41 +421,41 @@ export class UIManager {
 
     switch (state) {
       case 'loading':
-        iconWrap.innerHTML = SVG_HOURGLASS({ spinning: true, size: 28 });
+        iconWrap.innerHTML = SVG_HOURGLASS(true, 24);
         this.updateStatus(customMessage || 'Carregando FFmpeg WebAssembly...');
         break;
 
       case 'processing':
-        iconWrap.innerHTML = SVG_HOURGLASS({ spinning: true, size: 28 });
+        iconWrap.innerHTML = SVG_HOURGLASS(true, 24);
         this.updateStatus(customMessage || 'Processando vídeo...');
         break;
 
       case 'slow':
-        iconWrap.innerHTML = SVG_HOURGLASS({ spinning: true, size: 28 });
+        iconWrap.innerHTML = SVG_HOURGLASS(true, 24);
         this.updateStatus(customMessage || 'Processamento lento em andamento...');
         break;
 
       case 'finishing':
-        iconWrap.innerHTML = SVG_HOURGLASS({ spinning: true, size: 28 });
+        iconWrap.innerHTML = SVG_HOURGLASS(true, 24);
         this.updateStatus(customMessage || 'Finalizando arquivo...');
         break;
 
       case 'completed':
-        iconWrap.innerHTML = SVG_CHECK(28);
+        iconWrap.innerHTML = SVG_CHECK('ui-icon text-success', 24);
         this.updateStatus(customMessage || 'Conversão concluída com sucesso!');
         this.elements.btnCancel.disabled = true;
         this.elements.btnConvert.disabled = false;
         break;
 
       case 'error':
-        iconWrap.innerHTML = SVG_ERROR(28);
+        iconWrap.innerHTML = SVG_ERROR('ui-icon text-danger', 24);
         this.updateStatus(customMessage || 'Não foi possível concluir a conversão.');
         this.elements.btnCancel.disabled = true;
         this.elements.btnConvert.disabled = false;
         break;
 
       case 'cancelled':
-        iconWrap.innerHTML = SVG_CANCEL(28);
+        iconWrap.innerHTML = SVG_CANCEL('ui-icon text-danger', 24);
         this.updateStatus(customMessage || 'Conversão cancelada.');
         this.elements.btnCancel.disabled = true;
         this.elements.btnConvert.disabled = false;
@@ -463,7 +463,7 @@ export class UIManager {
 
       case 'idle':
       default:
-        iconWrap.innerHTML = SVG_HOURGLASS({ spinning: false, size: 28 });
+        iconWrap.innerHTML = SVG_HOURGLASS(false, 24);
         if (customMessage) this.updateStatus(customMessage);
         break;
     }

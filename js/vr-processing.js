@@ -1,6 +1,6 @@
 /**
  * VR Video Converter
- * Version: v.1.0.2
+ * Version: v.1.0.3
  *
  * vr-processing.js - Motor de Processamento Espacial VR, Filtros FFmpeg e Presets
  * Implementa o pipeline de transformação por olho:

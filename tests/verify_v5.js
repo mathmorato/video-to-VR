@@ -31,9 +31,9 @@ async function verifyAll() {
   console.log('✓ index.html acessível (status 200)');
 
   // 2. Versionamento
-  assert.ok(body.includes('id="app-footer-version">v.1.0.2</span>'), 'Rodapé principal deve ter v.1.0.2');
-  assert.ok(body.includes('sidebar-footer-version">v.1.0.2</span>'), 'Rodapé lateral deve ter v.1.0.2');
-  console.log('✓ Rodapés com versão v.1.0.2 confirmados.');
+  assert.ok(body.includes('id="app-footer-version">v.1.0.3</span>'), 'Rodapé principal deve ter v.1.0.3');
+  assert.ok(body.includes('sidebar-footer-version">v.1.0.3</span>'), 'Rodapé lateral deve ter v.1.0.3');
+  console.log('✓ Rodapés com versão v.1.0.3 confirmados.');
 
   // 3. Regra Zero Emojis
   const emojiRegex = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u;
@@ -50,7 +50,7 @@ async function verifyAll() {
   }
   console.log('✓ REGRA ZERO EMOJIS: Verificada em 100% dos arquivos (.html, .css, .js).');
 
-  // 4. Elementos visuais da V5 no HTML
+  // 4. Elementos visuais da V6 no HTML
   assert.ok(body.includes('conversion-hourglass'), 'Ampulheta animada deve existir no HTML');
   assert.ok(body.includes('modal-heavy-conversion'), 'Modal de conversão pesada deve existir no HTML');
   assert.ok(body.includes('quick_test'), 'Preset quick_test deve existir no HTML');
@@ -58,14 +58,17 @@ async function verifyAll() {
   assert.ok(body.includes('progress-speed-badge'), 'Selo de desempenho da velocidade deve existir');
   assert.ok(body.includes('progress-slow-notice'), 'Aviso de processamento lento deve existir');
   assert.ok(body.includes('progress-completion-container'), 'Container de previsão de conclusão deve existir');
-  console.log('✓ Elementos V5 (ampulheta, modal, métricas, selos, avisos) presentes no DOM.');
+  assert.ok(body.includes('progress-stats-container'), 'Container de cards independentes deve existir no HTML');
+  assert.ok(body.includes('progress-stat-card'), 'Cards individuais devem existir no HTML');
+  console.log('✓ Elementos V6 (ampulheta, modal, métricas, selos, avisos, cards separados) presentes no DOM.');
 
   // 5. CSS da ampulheta e animações
-  assert.ok(css.includes('@keyframes hourglass-spin'), 'Animação hourglass-spin deve existir no CSS');
+  assert.ok(css.includes('@keyframes conversion-hourglass-spin'), 'Animação conversion-hourglass-spin deve existir no CSS');
   assert.ok(css.includes('.conversion-hourglass'), 'Classe .conversion-hourglass deve existir no CSS');
+  assert.ok(css.includes('.conversion-hourglass.is-active'), 'Classe .conversion-hourglass.is-active deve existir no CSS');
   assert.ok(css.includes('prefers-reduced-motion'), 'Suporte a prefers-reduced-motion deve existir no CSS');
-  assert.ok(css.includes('.badge-muito-lento'), 'Classe .badge-muito-lento deve existir no CSS');
-  console.log('✓ CSS: @keyframes hourglass-spin, acessibilidade e classes visuais validadas.');
+  assert.ok(css.includes('.progress-stat-card'), 'Classe .progress-stat-card deve existir no CSS');
+  console.log('✓ CSS: @keyframes conversion-hourglass-spin, acessibilidade e classes visuais validadas.');
 
   // 6. Teste de lógica do TimeEstimator
   const { TimeEstimator } = await import('../js/time-estimator.js');
